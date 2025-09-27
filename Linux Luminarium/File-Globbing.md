@@ -467,19 +467,3 @@ pwn.college{MQ09s7P_cCSEy1qqBDXk0ddeqgQ.0VN0EzNxwyM1EzNzEzW}
 ### Notes:
 
 - Pressing tab can also autocomplete functions.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

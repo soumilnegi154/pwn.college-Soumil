@@ -395,10 +395,3 @@ pwn.college{QnqJjkVB6jvd6cNagM1YaLvMMS5.QX0ETO0wyM1EzNzEzW}
 
 - Builtins are invoked just like commands, but the shell handles them internally instead of launching other programs.
 - You can get help on a specific command using `help <command name>`.
-
-
-
-
-
-
-

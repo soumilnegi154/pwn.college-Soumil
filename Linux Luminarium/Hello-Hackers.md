@@ -98,7 +98,3 @@ pwn.college{0-LdtND1JRDpg8iPFuCw3Sv3EST.0lNzEzNxwyM1EzNzEzW}
 ### Notes:
 
 - We can scroll through the commands we have run using the arrow keys.
-
-
-
-
