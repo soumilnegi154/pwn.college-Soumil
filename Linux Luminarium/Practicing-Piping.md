@@ -549,7 +549,7 @@ But you can also use process substitution for _writing_ to commands!
 
 You can duplicate data to two files with `tee`:
 
-```console
+```sh
 hacker@dojo:~$ echo HACK | tee THE > PLANET
 hacker@dojo:~$ cat THE
 HACK
@@ -560,7 +560,7 @@ hacker@dojo:~$
 
 And you've used `tee` to duplicate data to a file and a command:
 
-```console
+```sh
 hacker@dojo:~$ echo HACK | tee THE | cat
 HACK
 hacker@dojo:~$ cat THE
@@ -571,7 +571,7 @@ hacker@dojo:~$
 But what about duplicating to two commands?
 As `tee` says in its manpage, it's designed to write to files and to standard output:
 
-```text
+```
 TEE(1)                           User Commands                          TEE(1)
 
 NAME
@@ -583,7 +583,7 @@ For writing to a command (output process substitution), use `>(command)`.
 If you write an argument of `>(rev)`, bash will run the `rev` command (this command reads data from standard input, reverses its order, and writes it to standard output!), but hook up its input to a temporary named pipe file.
 When commands write to this file, the data goes to the standard input of the command:
 
-```console
+```sh
 hacker@dojo:~$ echo HACK | rev
 KCAH
 hacker@dojo:~$ echo HACK | tee >(rev)
@@ -609,7 +609,7 @@ Scroll back through the previous challenges "Duplicating piped data with tee" an
 
 The observant learner will realize that the following are equivalent:
 
-```console
+```sh
 hacker@dojo:~$ echo hi | rev
 ih
 hacker@dojo:~$ echo hi > >(rev)
@@ -621,7 +621,7 @@ More than one way to pipe data!
 Of course, the second route is way harder to read and also harder to expand.
 For example:
 
-```console
+```sh
 hacker@dojo:~$ echo hi | rev | rev
 hi
 hacker@dojo:~$ echo hi > >(rev | rev)
@@ -634,31 +634,174 @@ The lesson here is that, while Process Substitution is a powerful tool in your t
 
 ## Solution:
 
-Describe your thought process and solve, write as much as possible with steps:
+After the terminal comes up, the user needs to invoke the `/challenge/hack` command, and duplicate its output as input to both the `/challenge/the` and the `/challenge/planet` commands. This can be done using the command `/challenge/hack | tee >(/challenge/the) | tee >(/challenge/planet)`.
 
-- 
-- 
-- 
+#### Commands run:
 
-Use this blob for pasting commands you've run
 ```sh
-$ cat flag
-pwn.college{}
+$ /challenge/hack | tee >(/challenge/the) | tee >(/challenge/planet)
 ```
 
 ## Flag: 
 
 ```
-pwn.college{ }
+pwn.college{QSF-JICCmZnfetPxNMhoRwvqTVN.QXwgDN1wyM1EzNzEzW}
 ```
 
-
-### References:
-
-- [link 1](https://pwn.college)
-- 
 ### Notes:
 
-Include things you learnt, alternate methods or mistakes you made while solving
+- We can use process substitution for _writing_ to commands using `>`.
+- We can duplicate the output of a command to two other commands using piping and process substitution, ex: `/challenge/hack | tee >(/challenge/the) | tee >(/challenge/planet)`.
+
+
+# Challenge 13 Split piping stderr and stdout
+
+Now, let's put your knowledge together.
+You must master the ultimate piping task: redirect stdout to one program and stderr to another.
+
+The challenge here, of course, is that the `|` operator links the _stdout_ of the left command with the _stdin_ of the right command.
+Of course, you've used `2>&1` to redirect stderr into stdout and, thus, pipe stderr over, but this then mixes stderr and stdout.
+How to keep it unmixed?
+
+You will need to combine your knowledge of `>()`, `2>`, and `|`.
+How to do it is a task I'll leave to you.
+
+In this challenge, you have:
+
+- `/challenge/hack`: this produces data on _stdout_ and _stderr_
+- `/challenge/the`: you must redirect `hack`'s _stderr_ to this program
+- `/challenge/planet`: you must redirect `hack`'s _stdout_ to this program
+
+Go get the flag!
+
+## Solution:
+
+After the terminal comes up, the user needs to invoke the `/challenge/run` program and redirect the standard error to `/challenge/the` and the standard output to `/challenge/planet`, this can be done using the command `/challenge/hack 2> >(/challenge/the) | /challenge/planet`.
+
+#### Commands run:
+
+```sh
+$ /challenge/hack 2> >(/challenge/the) | /challenge/planet
+```
+
+## Flag: 
+
+```
+pwn.college{oTiXL46HYSzq-1rLM4tR6eQmBtb.QXxQDM2wyM1EzNzEzW}
+```
+
+### Notes:
+
+- When doing process subsitution for writing to a command using `cmd1 > cmd2`, first the `cmd2` is run and then a file is hooked to its stdinp and then the file is passed as an argument to `cmd1`. Ex:
+
+```
+echo HACK | tee >(rev)
+```
+
+Here,  `bash` started up the `rev` command, hooking a named pipe (presumably `/dev/fd/63`) to `rev`'s standard input.
+- We can split pipe the stderr and stdout using `>`, `|`, `>(command)` using `cmd1 2> >(cmd2) | cmd3` where `cmd1` outputs stderr which needs to go in `cmd2` and stdout needs to go in `cmd3`.
+
+
+# Challenge 14 Named Pipes
+
+You've learned about pipes using `|`, and you've seen that process substitution creates temporary named pipes (like `/dev/fd/63`).
+You can also create your own _persistent_ named pipes that stick around on the filesystem!
+These are called **FIFOs**, which stands for First (byte) In, First (byte) Out.
+
+You create a FIFO using the `mkfifo` command:
+
+```sh
+hacker@dojo:~$ mkfifo my_pipe
+hacker@dojo:~$ ls -l my_pipe
+prw-r--r-- 1 hacker hacker 0 Jan 1 12:00 my_pipe
+-rw-r--r-- 1 hacker hacker 0 Jan 1 12:00 some_file
+hacker@dojo:~$
+```
+
+Notice the `p` at the beginning of the permissions - that indicates it's a pipe!
+That's markedly different than the `-` that's at the beginning of normal files, such as `some_file` in the above example.
+
+Unlike the automatic named pipes from process substitution:
+
+- You control where FIFOs are created
+- They persist until you delete them  
+- Any process can write to them by path (e.g., `echo hi > my_pipe`)
+- You can see them with `ls` and examine them like files
+
+One problem with FIFOs is that they'll "block" any operations on them until both the read side of the pipe and the write side of the pipe are ready.
+For example, consider this:
+
+```sh
+hacker@dojo:~$ mkfifo myfifo
+hacker@dojo:~$ echo pwn > myfifo
+```
+
+To service `echo pwn > myfifo`, bash will open the `myfifo` file in write mode.
+However, this operation will hang until something _also_ opens the file in read mode (thus completing the pipe).
+That can be in a different console:
+
+```sh
+hacker@dojo:~$ cat myfifo
+pwn
+hacker@dojo:~$
+```
+
+What happened here?
+When we ran `cat myfifo`, the pipe had both sides of the connection all set, and _unblocked_, allowing `echo pwn > myfifo` to run, which sent `pwn` into the pipe, where it was read by `cat`.
+
+Of course, this can somewhat be done by normal files: you've learned how to `echo` stuff into them and `cat` them out.
+Why use a FIFO instead?
+Here are key differences:
+
+1. **No disk storage:** FIFOs pass data directly between processes in memory - nothing is saved to disk
+2. **Ephemeral data:** Once data is read from a FIFO, it's gone (unlike files where data persists)
+3. **Automatic synchronization:** Writers block until the readers are ready, and vice-versa. This is actually useful! It provides automatic synchronization. Consider the example above: with a FIFO, it doesn't matter if `cat myfifo` or `echo pwn > myfifo` is executed first; each would just wait for the other. With files, you need to make sure to execute the writer before the reader.
+4. **Complex data flows:** FIFOs are useful for facilitating complex data flows, merging and splitting data in flexible ways, and so on. For example, FIFOs support multiple readers and writers.
+
+This challenge will be a simple introduction to FIFOs.
+You'll need to create a `/tmp/flag_fifo` file and redirect the stdout of `/challenge/run` to it.
+If you're successful, `/challenge/run` will write the flag into the FIFO!
+Go do it!
+
+----
+**HINT:**
+The blocking behavior of FIFOs makes it hard to solve this challenge in a single terminal.
+You may want to use the Desktop or VSCode mode for this challenge so that you can launch two terminals.
+
+
+## Solution:
+
+After the terminal comes up, first the user needs to create a named pipe `/tmp/flag_fifo`, this can be done using the command `mkfifo /tmp/flag_fifo`.
+
+Then the user can run the command `cat /tmp/flag_fifo`, this will _write_ from the pipe, however this will block any operation, so the user needs to open another terminal.
+
+On another terminal the user can run the command `/challenge/run > /tmp/flag_fifo` which will _read_ the output (FD1) of `/challenge/run` into the pipe `/tmp/flag_fifo` and hence redirecting it into the command `/cat`, thereby printing the flag.
+
+#### Commands run:
+
+```sh
+$ mkfifo /tmp/flag_fifo
+$ cat /tmp/flag_fifo
+$ /challenge/run > /tmp/flag_fifo
+```
+
+## Flag: 
+
+```
+pwn.college{sj__gPiS76WVHu5tO4cfsReOyBE.01MzMDOxwyM1EzNzEzW}
+```
+
+### Notes:
+
+- We can also create your own _persistent_ named pipes that stick around on the filesystem.
+- One problem with FIFOs is that they'll "block" any operations on them until both the read side of the pipe and the write side of the pipe are ready.
+- Differences between normal files and Fifo files.
+
+
+
+
+
+
+
 
 
