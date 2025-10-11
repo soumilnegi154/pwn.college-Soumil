@@ -437,18 +437,3 @@ pwn.college{cRdHnqrM867FqzLskI5pgPMDUZ_.QXwIDO0wyM1EzNzEzW}
 ### Notes:
 
 - We can also redirect files to stdinp of read variables.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
